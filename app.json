@@ -1,0 +1,153 @@
+{
+  "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
+  "id": "com.fp.blueconnect",
+  "version": "0.0.1",
+  "compatibility": ">=5.0.0",
+  "sdk": 3,
+  "name": {
+    "en": "Blueriiot Blue Connect"
+  },
+  "description": {
+    "en": "Adds support for Blueriiot Blue Connect devices."
+  },
+  "category": [
+    "appliances"
+  ],
+  "brandColor": "#0601FF",
+  "permissions": [],
+  "images": {
+    "large": "/assets/images/large.png",
+    "small": "/assets/images/small.png",
+    "xlarge": "/assets/images/xlarge.png"
+  },
+  "author": {
+    "name": "Fredrik Pålsson",
+    "email": "fredrik.palsson@home.se"
+  },
+  "support": "mailto:fredrik.palsson@home.se",
+  "bugs": {
+    "url": "https://github.com/fpalsson/com.fp.blueconnect/issues"
+  },
+  "source": "https://github.com/fpalsson/com.fp.blueconnect",
+  "contributing": {
+    "donate": {
+      "paypal": {
+        "username": "fpalssonswe"
+      }
+    }
+  },
+  "contributors": {
+    "developers": [
+      {
+        "name": "Ludvig Aldrin",
+        "email": "unknown"
+      }
+    ]
+  },
+  "homeyCommunityTopicId": 48209,
+  "drivers": [
+    {
+      "name": {
+        "en": "Blue Connect"
+      },
+      "class": "sensor",
+      "capabilities": [
+        "measure_temperature",
+        "measure_ph",
+        "measure_orp",
+        "measure_conductivity"
+      ],
+      "images": {
+        "small": "/drivers/blue-connect/assets/images/small.png",
+        "large": "/drivers/blue-connect/assets/images/large.png",
+        "xlarge": "/drivers/blue-connect/assets/images/xlarge.png"
+      },
+      "pair": [
+        {
+          "id": "login_credentials",
+          "template": "login_credentials",
+          "options": {
+            "logo": "logo.png",
+            "usernameLabel": {
+              "en": "E-mail address"
+            },
+            "usernamePlaceholder": {
+              "en": "john@doe.com"
+            },
+            "passwordLabel": {
+              "en": "Password"
+            },
+            "passwordPlaceholder": {
+              "en": "Password"
+            }
+          }
+        },
+        {
+          "id": "list_devices",
+          "template": "list_devices",
+          "navigation": {
+            "next": "add_devices"
+          }
+        },
+        {
+          "id": "add_devices",
+          "template": "add_devices"
+        }
+      ],
+      "id": "blue-connect"
+    }
+  ],
+  "capabilities": {
+    "measure_conductivity": {
+      "type": "number",
+      "title": {
+        "en": "Conductivity"
+      },
+      "icon": "/assets/gauge.svg",
+      "uiComponent": "sensor",
+      "getable": true,
+      "setable": false,
+      "units": {
+        "en": "uS"
+      },
+      "min": 0,
+      "max": 3000,
+      "decimals": 0,
+      "insights": true
+    },
+    "measure_orp": {
+      "type": "number",
+      "title": {
+        "en": "ORP"
+      },
+      "icon": "/assets/gauge.svg",
+      "uiComponent": "sensor",
+      "getable": true,
+      "setable": false,
+      "units": {
+        "en": "mV"
+      },
+      "min": 400,
+      "max": 1000,
+      "decimals": 0,
+      "insights": true
+    },
+    "measure_ph": {
+      "type": "number",
+      "title": {
+        "en": "pH"
+      },
+      "icon": "/assets/gauge.svg",
+      "uiComponent": "sensor",
+      "getable": true,
+      "setable": false,
+      "units": {
+        "en": ""
+      },
+      "min": 0,
+      "max": 14,
+      "decimals": 1,
+      "insights": true
+    }
+  }
+}

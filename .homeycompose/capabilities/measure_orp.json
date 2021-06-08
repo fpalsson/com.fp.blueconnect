@@ -1,0 +1,17 @@
+{
+  "type": "number",
+  "title": {
+    "en": "ORP"
+  },
+  "icon": "/assets/gauge.svg",
+  "uiComponent": "sensor",
+  "getable": true,
+  "setable": false,
+  "units": {
+    "en": "mV"
+  },
+  "min": 400,
+  "max": 1000,
+  "decimals":0,
+  "insights":true
+}

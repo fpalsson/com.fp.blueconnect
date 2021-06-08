@@ -1,0 +1,17 @@
+{
+    "type": "number",
+    "title": {
+        "en": "pH"
+    },
+    "icon": "/assets/gauge.svg",
+    "uiComponent": "sensor",
+    "getable": true,
+    "setable": false,
+    "units": {
+        "en": ""
+    },
+    "min": 0,
+    "max": 14,
+    "decimals":1,
+    "insights":true
+}

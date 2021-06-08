@@ -1,0 +1,17 @@
+{
+  "type": "number",
+  "title": {
+    "en": "Conductivity"
+  },
+  "icon": "/assets/gauge.svg",
+  "uiComponent": "sensor",
+  "getable": true,
+  "setable": false,
+  "units": {
+    "en": "uS"
+  },
+  "min": 0,
+  "max": 3000,
+  "decimals":0,
+  "insights":true
+}

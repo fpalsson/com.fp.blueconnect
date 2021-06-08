@@ -1,0 +1,39 @@
+{
+  "name": {
+    "en": "Blue Connect"
+  },
+  "class": "sensor",
+  "capabilities": [
+    "measure_temperature",
+    "measure_ph",
+    "measure_orp",
+    "measure_conductivity"
+  ],
+  "images": {
+    "small": "/drivers/blue-connect/assets/images/small.png",
+    "large": "/drivers/blue-connect/assets/images/large.png",
+    "xlarge": "/drivers/blue-connect/assets/images/xlarge.png"
+  },
+  "pair": [
+    {
+      "id": "login_credentials",
+      "template": "login_credentials",
+      "options": {
+        "logo": "logo.png",
+        "usernameLabel": { "en": "E-mail address" },
+        "usernamePlaceholder": { "en": "john@doe.com" },
+        "passwordLabel": { "en": "Password" },
+        "passwordPlaceholder": { "en": "Password" }
+      }
+    },
+    {
+      "id": "list_devices",
+      "template": "list_devices",
+      "navigation": { "next": "add_devices" }
+    },
+    {
+      "id": "add_devices",
+      "template": "add_devices"
+    }
+  ]
+}
