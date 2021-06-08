@@ -103,7 +103,7 @@
       "title": {
         "en": "Conductivity"
       },
-      "icon": "/assets/gauge.svg",
+      "icon": "/assets/measure_conductivity.svg",
       "uiComponent": "sensor",
       "getable": true,
       "setable": false,
@@ -120,7 +120,7 @@
       "title": {
         "en": "ORP"
       },
-      "icon": "/assets/gauge.svg",
+      "icon": "/assets/measure_orp.svg",
       "uiComponent": "sensor",
       "getable": true,
       "setable": false,
@@ -137,7 +137,7 @@
       "title": {
         "en": "pH"
       },
-      "icon": "/assets/gauge.svg",
+      "icon": "/assets/measure_ph.svg",
       "uiComponent": "sensor",
       "getable": true,
       "setable": false,

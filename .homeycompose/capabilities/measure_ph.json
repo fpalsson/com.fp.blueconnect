@@ -3,7 +3,7 @@
     "title": {
         "en": "pH"
     },
-    "icon": "/assets/gauge.svg",
+    "icon": "/assets/measure_ph.svg",
     "uiComponent": "sensor",
     "getable": true,
     "setable": false,

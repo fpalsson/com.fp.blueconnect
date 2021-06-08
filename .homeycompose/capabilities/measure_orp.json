@@ -3,7 +3,7 @@
   "title": {
     "en": "ORP"
   },
-  "icon": "/assets/gauge.svg",
+  "icon": "/assets/measure_orp.svg",
   "uiComponent": "sensor",
   "getable": true,
   "setable": false,
