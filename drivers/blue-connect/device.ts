@@ -244,13 +244,13 @@ class BlueConnectDevice extends Device {
   timerCallback() {
       this.refreshMeasurements()
 
-      this.runningtimer = setTimeout(() => { this.timerCallback(); }, 60000);
+      this.runningtimer = setTimeout(() => { this.timerCallback(); }, 10 * 60 * 1000);
   }
 
   startTimer() {
       console.log('Starting timer');
     //this.runningtimer = setTimeout(function() { this.timerCallback(); }.bind(this), 10000);
-      this.runningtimer = setTimeout(() => { this.timerCallback(); }, 1000);
+      this.runningtimer = setTimeout(() => { this.timerCallback(); }, 5000);
       console.log('Started timer');
   }
 
