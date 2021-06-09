@@ -111,7 +111,7 @@
         "en": "uS"
       },
       "min": 0,
-      "max": 3000,
+      "max": 20000,
       "decimals": 0,
       "insights": true
     },
@@ -127,7 +127,7 @@
       "units": {
         "en": "mV"
       },
-      "min": 400,
+      "min": 300,
       "max": 1000,
       "decimals": 0,
       "insights": true

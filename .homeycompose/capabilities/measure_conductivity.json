@@ -11,7 +11,7 @@
     "en": "uS"
   },
   "min": 0,
-  "max": 3000,
+  "max": 20000,
   "decimals":0,
   "insights":true
 }
