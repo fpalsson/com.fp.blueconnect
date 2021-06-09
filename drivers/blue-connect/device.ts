@@ -86,6 +86,9 @@ class BlueConnectDevice extends Device {
       let measurementsStringData = await this.api.getLastMeasurements(this.poolId, this.blueId)
       let measurementsData = JSON.parse(measurementsStringData);
   
+      console.log('New measurement...');
+      console.log(measurementsStringData);
+
       let measurementTimestamp = new Date(Date.parse(measurementsData.last_blue_measure_timestamp));
       if (measurementTimestamp > this.lastMeasurementTimestamp) {
           this.lastMeasurementTimestamp = measurementTimestamp
@@ -97,7 +100,7 @@ class BlueConnectDevice extends Device {
                       //if (this.lastTempMeasurement != measurement.value){
                           this.setCapabilityValue('measure_temperature', measurement.value);      
                       //    this.lastTempMeasurement = measurement.value;
-                          console.log('New temperature measurement. Now: ' + measurement.value);
+                      console.log('New temperature measurement. Now: ' + measurement.value);
                       //}
                   break; 
                   } 
@@ -106,7 +109,7 @@ class BlueConnectDevice extends Device {
                     //if (this.lastPhMeasurement != measurement.value){
                         this.setCapabilityValue('measure_ph', measurement.value);      
                     //    this.lastPhMeasurement = measurement.value;
-                        console.log('New pH measurement. Now: ' + measurement.value);
+                    console.log('New pH measurement. Now: ' + measurement.value);
                     //}
                   break; 
                   } 
@@ -115,7 +118,7 @@ class BlueConnectDevice extends Device {
                     //if (this.lastOrpMeasurement != measurement.value){
                         this.setCapabilityValue('measure_orp', measurement.value);      
                     //    this.lastOrpMeasurement = measurement.value;
-                        console.log('New ORP measurement. Now: ' + measurement.value);
+                    console.log('New ORP measurement. Now: ' + measurement.value);
                     //}
                   break; 
                   } 
@@ -124,7 +127,7 @@ class BlueConnectDevice extends Device {
                     //if (this.lastConductivityMeasurement != measurement.value){
                         this.setCapabilityValue('measure_conductivity', measurement.value);      
                     //    this.lastConductivityMeasurement = measurement.value;
-                        console.log('New conductivity measurement. Now: ' + measurement.value);
+                    console.log('New conductivity measurement. Now: ' + measurement.value);
                     //}
                   break; 
                   } 
@@ -255,7 +258,7 @@ class BlueConnectDevice extends Device {
   timerCallback() {
       this.refreshMeasurements()
 
-      this.runningtimer = setTimeout(() => { this.timerCallback(); }, 10 * 60 * 1000);
+      this.runningtimer = setTimeout(() => { this.timerCallback(); }, 1 * 60 * 1000);
   }
 
   startTimer() {
