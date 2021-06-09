@@ -15,6 +15,7 @@ class BlueConnectDevice extends Device {
   private lastPhMeasurement:number=0;
   private lastOrpMeasurement:number=0;
   private lastConductivityMeasurement:number=0;
+  private lastMeasurementTimestamp:Date = new Date(0);
 
   /**
    * onInit is called when the device is initialized.
@@ -85,50 +86,60 @@ class BlueConnectDevice extends Device {
       let measurementsStringData = await this.api.getLastMeasurements(this.poolId, this.blueId)
       let measurementsData = JSON.parse(measurementsStringData);
   
-      measurementsData.data.forEach((measurement:any) => {
+      let measurementTimestamp = new Date(Date.parse(measurementsData.last_blue_measure_timestamp));
+      if (measurementTimestamp > this.lastMeasurementTimestamp) {
+          this.lastMeasurementTimestamp = measurementTimestamp
+
+          measurementsData.data.forEach((measurement:any) => {
   
-        switch(measurement.name) { 
-            case 'temperature': { 
-                if (this.lastTempMeasurement != measurement.value){
-                    this.setCapabilityValue('measure_temperature', measurement.value);      
-                    this.lastTempMeasurement = measurement.value;
-                    console.log('Temperature changed. Now: ' + measurement.value);
-                }
-            break; 
-            } 
-            case 'ph': { 
-              measurement.value = Math.round(measurement.value*10)/10;
-              if (this.lastPhMeasurement != measurement.value){
-                  this.setCapabilityValue('measure_ph', measurement.value);      
-                  this.lastPhMeasurement = measurement.value;
-                  console.log('pH changed. Now: ' + measurement.value);
-              }
-            break; 
-            } 
-            case 'orp': { 
-              measurement.value = Math.round(measurement.value);
-              if (this.lastOrpMeasurement != measurement.value){
-                  this.setCapabilityValue('measure_orp', measurement.value);      
-                  this.lastOrpMeasurement = measurement.value;
-                  console.log('ORP changed. Now: ' + measurement.value);
-              }
-            break; 
-            } 
-            case 'conductivity': { 
-              measurement.value = Math.round(measurement.value);
-              if (this.lastConductivityMeasurement != measurement.value){
-                  this.setCapabilityValue('measure_conductivity', measurement.value);      
-                  this.lastConductivityMeasurement = measurement.value;
-                  console.log('Conductivity changed. Now: ' + measurement.value);
-              }
-            break; 
-            } 
-            default: { 
-                  //statements; 
+              switch(measurement.name) { 
+                  case 'temperature': { 
+                      //if (this.lastTempMeasurement != measurement.value){
+                          this.setCapabilityValue('measure_temperature', measurement.value);      
+                      //    this.lastTempMeasurement = measurement.value;
+                          console.log('New temperature measurement. Now: ' + measurement.value);
+                      //}
                   break; 
-                } 
-          } 
-      });
+                  } 
+                  case 'ph': { 
+                    measurement.value = Math.round(measurement.value*10)/10;
+                    //if (this.lastPhMeasurement != measurement.value){
+                        this.setCapabilityValue('measure_ph', measurement.value);      
+                    //    this.lastPhMeasurement = measurement.value;
+                        console.log('New pH measurement. Now: ' + measurement.value);
+                    //}
+                  break; 
+                  } 
+                  case 'orp': { 
+                    measurement.value = Math.round(measurement.value);
+                    //if (this.lastOrpMeasurement != measurement.value){
+                        this.setCapabilityValue('measure_orp', measurement.value);      
+                    //    this.lastOrpMeasurement = measurement.value;
+                        console.log('New ORP measurement. Now: ' + measurement.value);
+                    //}
+                  break; 
+                  } 
+                  case 'conductivity': { 
+                    measurement.value = Math.round(measurement.value);
+                    //if (this.lastConductivityMeasurement != measurement.value){
+                        this.setCapabilityValue('measure_conductivity', measurement.value);      
+                    //    this.lastConductivityMeasurement = measurement.value;
+                        console.log('New conductivity measurement. Now: ' + measurement.value);
+                    //}
+                  break; 
+                  } 
+                  default: { 
+                        //statements; 
+                        break; 
+                  } 
+              } 
+          });
+     
+      }
+      else {
+
+      }
+
         
     } catch (error) {
       console.log('Error in refreshMeasurements: ' + error);      
