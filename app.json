@@ -1,14 +1,14 @@
 {
   "_comment": "This file is generated. Please edit .homeycompose/app.json instead.",
   "id": "com.fp.blueconnect",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "compatibility": ">=5.0.0",
   "sdk": 3,
   "name": {
     "en": "Blueriiot Blue Connect"
   },
   "description": {
-    "en": "Adds support for Blueriiot Blue Connect devices."
+    "en": "Keep track of you pool water quality."
   },
   "category": [
     "appliances"
@@ -40,7 +40,7 @@
     "developers": [
       {
         "name": "Ludvig Aldrin",
-        "email": "unknown"
+        "email": "ludvig.aldrin@gmail.com"
       }
     ]
   },
