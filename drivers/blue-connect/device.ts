@@ -258,7 +258,7 @@ class BlueConnectDevice extends Device {
   timerCallback() {
       this.refreshMeasurements()
 
-      this.runningtimer = setTimeout(() => { this.timerCallback(); }, 1 * 60 * 1000);
+      this.runningtimer = setTimeout(() => { this.timerCallback(); }, 10 * 60 * 1000);
   }
 
   startTimer() {
