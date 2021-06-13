@@ -1,0 +1,17 @@
+{
+    "type": "number",
+    "title": {
+        "en": "Salinity"
+    },
+    "icon": "/assets/measure_conductivity.svg",
+    "uiComponent": "sensor",
+    "getable": true,
+    "setable": false,
+    "units": {
+        "en": "g/l"
+    },
+    "min": 0,
+    "max": 10,
+    "decimals":1,
+    "insights":true
+}

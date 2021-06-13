@@ -1,8 +1,7 @@
 This app adds support for Blue Connect devices.
 
-Currently it reads temperature, pH, ORP and conductivity.
+Currently it reads temperature, pH, ORP and conductivity or salinity.
 
-Todo: 
+There are flow triggers for the things you might need. 
 
-Add flow triggers for changes to pH, ORP and conductivity.
-Add alarms when water treatment is needed.
+Feel free to suggest features, see the community page below.

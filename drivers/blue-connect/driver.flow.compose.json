@@ -1,0 +1,274 @@
+{
+  "temp":
+  [
+    {
+      "id": "test",
+      "title": {
+        "en": "Test"
+      },
+      "tokens_X": [
+        {
+          "type": "number",
+          "name": "ph",
+          "title": {
+            "en": "pH value"
+          },
+          "example": {
+            "en": "7.4"
+          }
+        }
+      ]
+    }
+
+  ],
+  "triggers": [
+    {
+      "id": "measure_ph_changed",
+      "title": {
+        "en": "pH changed"
+      },
+      "tokens": [
+        {
+          "type": "number",
+          "name": "measure_ph",
+          "title": {
+            "en": "pH value"
+          },
+          "example": {
+            "en": "7.4"
+          }
+        }
+      ]
+    },
+    {
+      "id": "measure_ph_goes_above",
+      "title": {
+        "en": "pH goes above"
+      },
+      "args": [
+        {
+          "type": "number",
+          "name": "ph",
+          "placeholder": {
+            "en": "pH value"
+          },
+          "min": 0,
+          "max": 14,
+          "step": 0.1
+        }
+      ],
+      "tokens": [
+        {
+          "type": "number",
+          "name": "measure_ph",
+          "title": {
+            "en": "ph value"
+          },
+          "example": {
+            "en": "8.0"
+          }
+        }
+      ]
+    },
+    {
+      "id": "measure_ph_goes_below",
+      "title": {
+        "en": "pH goes below"
+      },
+      "args": [
+        {
+          "type": "number",
+          "name": "ph",
+          "placeholder": {
+            "en": "pH value"
+          },
+          "min": 0,
+          "max": 14,
+          "step": 0.1
+        }
+      ],
+      "tokens": [
+        {
+          "type": "number",
+          "name": "measure_ph",
+          "title": {
+            "en": "ph value"
+          },
+          "example": {
+            "en": "8.0"
+          }
+        }
+      ]
+    },
+    {
+      "id": "measure_orp_changed",
+      "title": {
+        "en": "ORP changed"
+      },
+      "tokens": [
+        {
+          "type": "number",
+          "name": "measure_orp",
+          "title": {
+            "en": "ORP value"
+          },
+          "example": {
+            "en": "600"
+          }
+        }
+      ]
+    },
+    {
+      "id": "measure_orp_goes_above",
+      "title": {
+        "en": "ORP goes above"
+      },
+      "args": [
+        {
+          "type": "number",
+          "name": "orp",
+          "placeholder": {
+            "en": "ORP value"
+          },
+          "min": 300,
+          "max": 1000,
+          "step": 1
+        }
+      ],
+      "tokens": [
+        {
+          "type": "number",
+          "name": "measure_orp",
+          "title": {
+            "en": "ORP value"
+          },
+          "example": {
+            "en": "600"
+          }
+        }
+      ]
+    },
+    {
+      "id": "measure_orp_goes_below",
+      "title": {
+        "en": "ORP goes below"
+      },
+      "args": [
+        {
+          "type": "number",
+          "name": "orp",
+          "placeholder": {
+            "en": "ORP value"
+          },
+          "min": 300,
+          "max": 1000,
+          "step": 1
+        }
+      ],
+      "tokens": [
+        {
+          "type": "number",
+          "name": "measure_orp",
+          "title": {
+            "en": "ORP value"
+          },
+          "example": {
+            "en": "600"
+          }
+        }
+      ]
+    },
+    {
+      "id": "new_measurement",
+      "title": {
+        "en": "New measurement"
+      },
+      "hint": {
+        "en": "Triggered when a new measurement is detected"
+      },
+      "tokens": [
+        {
+          "type": "number",
+          "name": "measure_ph",
+          "title": {
+            "en": "pH"
+          },
+          "example": {
+            "en": "7.4"
+          }
+        },
+        {
+          "type": "number",
+          "name": "measure_orp",
+          "title": {
+            "en": "ORP"
+          },
+          "example": {
+            "en": "600"
+          }
+        },
+        {
+          "type": "number",
+          "name": "measure_temperature",
+          "title": {
+            "en": "Temperature"
+          },
+          "example": {
+            "en": "28.1"
+          }
+        },
+        {
+          "type": "number",
+          "name": "measure_conductivity",
+          "title": {
+            "en": "Conductivity"
+          },
+          "example": {
+            "en": "600"
+          }
+        },
+        {
+          "type": "number",
+          "name": "measure_salinity",
+          "title": {
+            "en": "Salinity"
+          },
+          "example": {
+            "en": "Salinity value"
+          }
+        },
+        {
+          "type": "string",
+          "name": "measurement_timestamp",
+          "title": {
+            "en": "Measurement timestamp"
+          },
+          "example": {
+            "en": "1 Aug 18:43"
+          }
+        }
+      ]
+    },
+    {
+      "id": "new_guidance_action",
+      "title": {
+        "en": "New guidance action"
+      },
+      "hint": {
+        "en": "Triggered when a new action is suggested"
+      },
+      "tokens": [
+        {
+          "type": "string",
+          "name": "guidance_action",
+          "title": {
+            "en": "Action suggested"
+          },
+          "example": {
+            "en": "Add xx grams of chlorine"
+          }
+        }
+      ]
+    }
+  ]
+}

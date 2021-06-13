@@ -4,6 +4,21 @@
   },
   "0.0.2": {
     "en": "Improved icons, images, app description and functional logic."
+  },
+  "0.0.3": {
+    "en": "Implemented measurement time as a sensor, and started implementing pH warning."
+  },
+  "0.1.0": {
+    "en": "Added guidance action info. Added salinity measurement. New sensor icons. Added flows for changed/above/below for pH and ORP. Added flows for new measurements and new guidance actions. Added state sensors for pH, ORP, conductivity."
+  },
+  "0.1.1": {
+    "en": "Added guidance action info. Added salinity measurement. New sensor icons. Added flows for changed/above/below for pH and ORP. Added flows for new measurements and new guidance actions. Added state sensors for pH, ORP, conductivity. Adjusted README."
+  },
+  "0.1.2": {
+    "en": "Added guidance action info. Added salinity measurement. New sensor icons. Added flows for changed/above/below for pH and ORP. Added flows for new measurements and new guidance actions. Added state sensors for pH, ORP, conductivity. Bugfix: Waiting for values to be set before using them. Adjusted README."
+  },
+  "0.1.3": {
+    "en": "Added guidance action info. Added salinity measurement. New sensor icons. Added flows for changed/above/below for pH and ORP. Added flows for new measurements and new guidance actions. Added state sensors for pH, ORP, conductivity. Bugfix: Waiting for values to be set before using them. Bugfix: corrected above/below flows. Adjusted README."
   }
-  
+
 }

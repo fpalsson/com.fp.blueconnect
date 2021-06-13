@@ -4,10 +4,18 @@
   },
   "class": "sensor",
   "capabilities": [
+    
+  ],
+  "temp":[
     "measure_temperature",
     "measure_ph",
     "measure_orp",
-    "measure_conductivity"
+    "measure_conductivity",
+    "measurement_timestamp",
+    "status_ph",
+    "status_orp"
+    
+   
   ],
   "images": {
     "small": "/drivers/blue-connect/assets/images/small.png",

@@ -1,6 +1,25 @@
-import { Device } from 'homey';
+import { Device, FlowCardTriggerDevice, FlowToken } from 'homey';
 // @ts-ignore
-import { BlueriiotAPI} from 'blueriiot-api-client';
+import { BlueriiotAPI } from 'blueriiot-api-client';
+//import { mapSourcePosition } from 'source-map-support';
+import { DateTime } from 'luxon';
+//import { stringify } from 'querystring';
+
+enum MeasurementStatus {
+  WithinRecommended,
+  AboveRecommended,
+  BelowRecommended,
+  LowWarning,
+  HighWarning
+}
+
+type Measurement = {
+  name:string,
+  value:number,
+  status:MeasurementStatus
+
+};
+
 
 class BlueConnectDevice extends Device {
   private api:any;
@@ -11,20 +30,91 @@ class BlueConnectDevice extends Device {
   private blueId:string='';
   private runningtimer!:NodeJS.Timeout;
 
-  private lastTempMeasurement:number=0;
-  private lastPhMeasurement:number=0;
-  private lastOrpMeasurement:number=0;
-  private lastConductivityMeasurement:number=0;
   private lastMeasurementTimestamp:Date = new Date(0);
+  private lastFeedTimestamp:Date = new Date(0);
+  private lastPoolStatusTimestamp:Date = new Date(0);
+
+  private capabilityCache:any=new Object();
+
+  private triggerTest!: FlowCardTriggerDevice;
+
+  private triggerNewMeasurement!: FlowCardTriggerDevice;
+  private triggerNewGuidanceAction!: FlowCardTriggerDevice;
+
+  private triggerPhChanged!: FlowCardTriggerDevice;
+  private triggerPhGoesAbove!: FlowCardTriggerDevice;
+  private triggerPhGoesBelow!: FlowCardTriggerDevice;
+
+  private triggerOrpChanged!: FlowCardTriggerDevice;
+  private triggerOrpGoesAbove!: FlowCardTriggerDevice;
+  private triggerOrpGoesBelow!: FlowCardTriggerDevice;
 
   /**
    * onInit is called when the device is initialized.
    */
   async onInit() {
-    await this.addCapability('measure_ph');
-    await this.addCapability('measure_orp');
-    await this.addCapability('measure_conductivity');
 
+    if (!this.hasCapability('measurement_timestamp')) await this.addCapability('measurement_timestamp')
+    if (!this.hasCapability('measure_temperature')) await this.addCapability('measure_temperature')
+    if (!this.hasCapability('measure_ph')) await this.addCapability('measure_ph')
+    if (!this.hasCapability('status_ph')) await this.addCapability('status_ph')
+    if (!this.hasCapability('measure_orp')) await this.addCapability('measure_orp')
+    if (!this.hasCapability('status_orp')) await this.addCapability('status_orp')
+    if (!this.hasCapability('guidance_action')) await this.addCapability('guidance_action')
+    //Salinity and conductivity is added when measurement is read and we know which one is relevant...
+
+    //await this.setCapabilityValue2('measure_orp', 500);
+/*
+    this.triggerTest = this.homey.flow.getDeviceTriggerCard('test');
+    this.triggerTest.registerRunListener(async (args:any, state:any) => {
+      console.log('triggerTest run');
+      return false;
+    })
+  */   
+    this.triggerNewMeasurement = this.homey.flow.getDeviceTriggerCard('new_measurement');
+    this.triggerNewGuidanceAction = this.homey.flow.getDeviceTriggerCard('new_guidance_action');
+
+
+    this.triggerPhChanged = this.homey.flow.getDeviceTriggerCard('measure_ph_changed');
+    //Changed trigger will be handeled by homey as it has id XXX_changed
+    this.triggerPhGoesAbove = this.homey.flow.getDeviceTriggerCard('measure_ph_goes_above');
+    this.triggerPhGoesAbove.registerRunListener(async (args:any, state:any) => {
+      console.log('triggerPhGoesAbove run');
+      let ph:number = args.ph;
+      let res = (state.prevVal <= ph && state.newVal > ph);
+      console.log('triggerPhGoesAbove ph: ' + ph + ', prev: ' + state.prevVal + ', new: ' + state.newVal + ', run: ' + res);
+      return res;
+    })
+    this.triggerPhGoesBelow = this.homey.flow.getDeviceTriggerCard('measure_orp_goes_below');
+    this.triggerPhGoesBelow.registerRunListener(async (args:any, state:any) => {
+      console.log('triggerPhGoesBelow run');
+      let ph:number = args.ph;
+      let res = (state.prevVal >= ph && state.newVal < ph);
+      console.log('triggerPhGoesBelow ph: ' + ph + ', prev: ' + state.prevVal + ', new: ' + state.newVal + ', run: ' + res);
+      return res;
+    })
+
+
+    this.triggerOrpChanged = this.homey.flow.getDeviceTriggerCard('measure_orp_changed');
+    //Changed trigger will be handeled by homey as it has id XXX_changed
+    this.triggerOrpGoesAbove = this.homey.flow.getDeviceTriggerCard('measure_orp_goes_above');
+    this.triggerOrpGoesAbove.registerRunListener(async (args:any, state:any) => {
+      console.log('triggerOrpGoesAbove run');
+      let orp:number = args.orp;
+      let res = (state.prevVal <= orp && state.newVal > orp);
+      console.log('triggerOrpGoesAbove orp: ' + orp + ', prev: ' + state.prevVal + ', new: ' + state.newVal + ', run: ' + res);
+      return res;
+    })
+    this.triggerOrpGoesBelow = this.homey.flow.getDeviceTriggerCard('measure_orp_goes_below');
+    this.triggerOrpGoesBelow.registerRunListener(async (args:any, state:any) => {
+      console.log('triggerOrpGoesBelow run');
+      let orp:number = args.orp;
+      let res = (state.prevVal >= orp && state.newVal < orp);
+      console.log('triggerOrpGoesBelow orp: ' + orp + ', prev: ' + state.prevVal + ', new: ' + state.newVal + ', run: ' + res);
+      return res;
+    })
+
+    
     let data:any = this.getData();
     console.log(data.id);
 
@@ -37,6 +127,7 @@ class BlueConnectDevice extends Device {
     if (this.apiInited) {
         this.startTimer();
     }
+    this.startTestTimer();
     
     this.log('BlueConnectDevice has been initialized');
     
@@ -79,6 +170,127 @@ class BlueConnectDevice extends Device {
     this.log('BlueConnectDevice has been deleted');
   }
 
+  async setCapabilityValue2(capabilityId:string, value:any){
+    this.capabilityCache[capabilityId]=value;
+    this.setCapabilityValue(capabilityId, value);
+  }
+
+  getCapabilityValue2(capabilityId:string){
+    let res = this.capabilityCache[capabilityId];
+    if (res == undefined) {
+      res = this.getCapabilityValue(capabilityId);
+      this.capabilityCache[capabilityId]=res;
+    }
+    return res;
+  }
+
+  utcToLocalTimeString(utcDate:Date):string{
+    let options = { year: 'numeric', month: 'numeric', day: 'numeric' , hour: 'numeric', minute: 'numeric', hour12:  false } as const;
+    //const { DateTime } = require('luxon');
+    
+    const utc = DateTime.fromJSDate(utcDate);
+    const luxonDateLocal = utc.setZone(this.homey.clock.getTimezone());
+//          const dateLocal = new Date(luxonDateLocal.toJSDate()));
+
+    console.log('Measurement timestamp (local time): ' + luxonDateLocal.toString());
+
+    return luxonDateLocal.toLocaleString( {month:'short', day:'2-digit', hour:'2-digit', minute:'2-digit', hour12:false });
+
+  }
+
+  async refreshFeed() {
+    try {
+      //console.log('Starting refresh with poolId: ' + this.poolId + ' blueId: ' + this.blueId);
+      let feedStringData = await this.api.getSwimmingPoolFeed(this.poolId, "en");
+      let feedData = JSON.parse(feedStringData);
+  
+      console.log('Read feed...');
+      console.log(feedStringData);
+
+      let feedTimestamp = new Date(Date.parse(feedData.timestamp));
+      if (feedTimestamp > this.lastFeedTimestamp) {
+          this.lastFeedTimestamp = feedTimestamp;
+          feedData.data.forEach(async (feed:any) => {
+            console.log('feed.data[x].id: ' + feed.id);
+            console.log('feed.data[x].title: ' + feed.title);
+            console.log('feed.data[x].message: ' + feed.message);
+          });
+   
+      }
+      else {
+          console.log('No new feed...');
+      }
+
+        
+    } catch (error) {
+      console.log('Error in refreshFeed: ' + error);      
+    }
+  }
+
+  async refreshPoolStatus() {
+    try {
+      //console.log('Starting refresh with poolId: ' + this.poolId + ' blueId: ' + this.blueId);
+      let poolStatusStringData = await this.api.getSwimmingPoolStatus(this.poolId);
+      let poolStatus = JSON.parse(poolStatusStringData);
+  
+      console.log('Read pool status...');
+      console.log(poolStatusStringData);
+
+      let poolStatusTimestamp = new Date(Date.parse(poolStatus.created));
+      if (poolStatusTimestamp > this.lastPoolStatusTimestamp) {
+          this.lastPoolStatusTimestamp = poolStatusTimestamp;
+          poolStatus.tasks.forEach(async (task:any) => {
+            console.log('status.task: ' + JSON.stringify(task));
+          });
+   
+      }
+      else {
+          console.log('No new pool status...');
+      }
+
+        
+    } catch (error) {
+      console.log('Error in refreshPoolStatus: ' + error);      
+    }
+  }
+  async refreshPoolGuidance() {
+    try {
+      //console.log('Starting refresh with poolId: ' + this.poolId + ' blueId: ' + this.blueId);
+      let poolGuidanceStringData = await this.api.getGuidance(this.poolId, "en");
+      let poolGuidance = JSON.parse(poolGuidanceStringData);
+  
+      console.log('Read pool guidance...');
+      console.log(poolGuidanceStringData);
+
+      let poolGuidanceTimestamp = new Date(Date.parse(poolGuidance.created));
+      
+      let id = poolGuidance.guidance.issue_to_fix.task_identifier;
+      let action = poolGuidance.guidance.issue_to_fix.action_title;
+      let title = poolGuidance.guidance.issue_to_fix.issue_title;
+
+      if (action != this.getCapabilityValue2('guidance_action')){
+
+        await this.setCapabilityValue2('guidance_action', action);  
+        console.log('New guidance: ' + action);
+
+        const tokens = 
+        {
+          guidance_action : <string>action,
+        }
+        
+        let trigger:any = this.triggerNewGuidanceAction;
+        await trigger.trigger(this, tokens, {});
+        console.log('Triggered new guidance action flow');
+      }
+      else {
+        console.log('No new guidance');
+      }
+
+        
+    } catch (error) {
+      console.log('Error in refreshPoolGuidance: ' + error);      
+    }
+  }
 
   async refreshMeasurements() {
     try {
@@ -86,49 +298,62 @@ class BlueConnectDevice extends Device {
       let measurementsStringData = await this.api.getLastMeasurements(this.poolId, this.blueId)
       let measurementsData = JSON.parse(measurementsStringData);
   
-      console.log('New measurement...');
+      console.log('Read measurement...');
       console.log(measurementsStringData);
 
       let measurementTimestamp = new Date(Date.parse(measurementsData.last_blue_measure_timestamp));
       if (measurementTimestamp > this.lastMeasurementTimestamp) {
           this.lastMeasurementTimestamp = measurementTimestamp
 
-          measurementsData.data.forEach((measurement:any) => {
+          await this.setCapabilityValue2('measurement_timestamp', this.utcToLocalTimeString(measurementTimestamp));  
+
+          measurementsData.data.forEach(async (measurement:any) => {
   
-              switch(measurement.name) { 
+              let pm = this.parseMeasurement(measurement);
+              
+              if (pm.name == 'ph' || pm.name == 'temperature' || pm.name == 'salinity') pm.value = Math.round(pm.value*10)/10; 
+              else pm.value=Math.round(pm.value);
+
+              switch(pm.name) { 
                   case 'temperature': { 
-                      //if (this.lastTempMeasurement != measurement.value){
-                          this.setCapabilityValue('measure_temperature', measurement.value);      
-                      //    this.lastTempMeasurement = measurement.value;
-                      console.log('New temperature measurement. Now: ' + measurement.value);
+                      await this.setCapabilityValue2('measure_temperature', pm.value);
+                      console.log('New temperature measurement. Now: ' + pm.value);
                       //}
                   break; 
                   } 
                   case 'ph': { 
-                    measurement.value = Math.round(measurement.value*10)/10;
-                    //if (this.lastPhMeasurement != measurement.value){
-                        this.setCapabilityValue('measure_ph', measurement.value);      
-                    //    this.lastPhMeasurement = measurement.value;
-                    console.log('New pH measurement. Now: ' + measurement.value);
-                    //}
+                    let lastValue:number = this.getCapabilityValue2('measure_ph');
+                    await this.setCapabilityValue2('measure_ph', pm.value);
+                    await this.setCapabilityValue2('status_ph', this.createStatusText(pm.status));      
+                    this.runNumberTriggers(lastValue, pm.value, {measure_ph: pm.value}, null, this.triggerPhGoesAbove, this.triggerPhGoesBelow); //change trigger will be triggered automatically by homey, as the name is xxx_changed
+                    console.log('New pH measurement. Now: ' + pm.value);
                   break; 
                   } 
                   case 'orp': { 
-                    measurement.value = Math.round(measurement.value);
-                    //if (this.lastOrpMeasurement != measurement.value){
-                        this.setCapabilityValue('measure_orp', measurement.value);      
-                    //    this.lastOrpMeasurement = measurement.value;
-                    console.log('New ORP measurement. Now: ' + measurement.value);
-                    //}
+                    let lastValue:number = this.getCapabilityValue2('measure_orp');
+                    await this.setCapabilityValue2('measure_orp', pm.value);      
+                    await this.setCapabilityValue2('status_orp', this.createStatusText(pm.status));      
+                    this.runNumberTriggers(lastValue, pm.value, {measure_orp: pm.value}, null, this.triggerOrpGoesAbove, this.triggerOrpGoesBelow); //change trigger will be triggered automatically by homey, as the name is xxx_changed
+                    console.log('New ORP measurement. Now: ' + pm.value);
                   break; 
                   } 
                   case 'conductivity': { 
-                    measurement.value = Math.round(measurement.value);
-                    //if (this.lastConductivityMeasurement != measurement.value){
-                        this.setCapabilityValue('measure_conductivity', measurement.value);      
-                    //    this.lastConductivityMeasurement = measurement.value;
-                    console.log('New conductivity measurement. Now: ' + measurement.value);
-                    //}
+                    if (this.hasCapability('measure_salinity')) await this.removeCapability('measure_salinity')
+                    if (this.hasCapability('status_salinity')) await this.removeCapability('status_salinity')
+
+                    if (!this.hasCapability('measure_conductivity')) await this.addCapability('measure_conductivity')
+                    await this.setCapabilityValue2('measure_conductivity', pm.value);      
+                    console.log('New conductivity measurement. Now: ' + pm.value);
+                  break; 
+                  } 
+                  case 'salinity': { 
+                    if (this.hasCapability('measure_conductivity')) await this.removeCapability('measure_conductivity')
+
+                    if (!this.hasCapability('measure_salinity')) await this.addCapability('measure_salinity')
+                    await this.setCapabilityValue2('measure_salinity', pm.value);      
+                    if (!this.hasCapability('status_salinity')) await this.addCapability('status_salinity')
+                    await this.setCapabilityValue2('status_salinity', this.createStatusText(pm.status));      
+                    console.log('New salinity measurement. Now: ' + pm.value);
                   break; 
                   } 
                   default: { 
@@ -138,9 +363,27 @@ class BlueConnectDevice extends Device {
               } 
           });
      
+          /*let phFlowToken:FlowToken = new FlowToken();
+          phFlowToken.id='ph';
+          phFlowToken.setValue(this.getCapabilityValue2('measure_ph'));
+*/
+          const tokens = 
+          {
+            measure_ph : <number>this.getCapabilityValue2('measure_ph'),
+            measure_orp : <number>this.getCapabilityValue2('measure_orp'),
+            measure_temperature : <number>this.getCapabilityValue2('measure_temperature'),
+            measure_conductivity : this.hasCapability('measure_conductivity') ? <number>this.getCapabilityValue2('measure_conductivity') : 0,
+            measure_salinity : this.hasCapability('measure_salinity') ? <number>this.getCapabilityValue2('measure_salinity') : 0,
+            measurement_timestamp : <string>this.getCapabilityValue2('measurement_timestamp'),
+          }
+          console.log ('Tokens new measurement: ' + tokens);
+
+          let trigger:any = this.triggerNewMeasurement;
+          await trigger.trigger(this, tokens, {});
+          console.log('Triggered new measurement flow');
       }
       else {
-
+          console.log('No new measurement...');
       }
 
         
@@ -148,77 +391,50 @@ class BlueConnectDevice extends Device {
       console.log('Error in refreshMeasurements: ' + error);      
     }
     
+  }
 
-  /*  {
-      "status": "OK",
-      "last_blue_measure_timestamp": "2021-06-07T09:35:00.000Z",
-      "blue_device_serial": "",
-      "swimming_pool_id": "",
-      "data": [
-        {
-          "name": "temperature",
-          "priority": 10,
-          "timestamp": "2021-06-07T09:35:00.000Z",
-          "expired": false,
-          "value": 28.3,
-          "trend": "stable",
-          "ok_min": 20,
-          "ok_max": 40,
-          "warning_high": 50,
-          "warning_low": 5,
-          "gauge_max": 50,
-          "gauge_min": 0,
-          "issuer": "gateway"
-        },
-        {
-          "name": "ph",
-          "priority": 20,
-          "timestamp": "2021-06-07T09:35:00.000Z",
-          "expired": false,
-          "value": 7.6,
-          "trend": "stable",
-          "ok_min": 7.2,
-          "ok_max": 7.6,
-          "warning_high": 8.4,
-          "warning_low": 6.6,
-          "gauge_max": 10,
-          "gauge_min": 5,
-          "issuer": "gateway"
-        },
-        {
-          "name": "orp",
-          "priority": 30,
-          "timestamp": "2021-06-07T09:35:00.000Z",
-          "expired": false,
-          "value": 661,
-          "trend": "stable",
-          "ok_min": 650,
-          "ok_max": 750,
-          "warning_high": 900,
-          "warning_low": 400,
-          "gauge_max": 1000,
-          "gauge_min": 300,
-          "issuer": "gateway"
-        },
-        {
-          "name": "conductivity",
-          "priority": 40,
-          "timestamp": "2021-06-07T09:35:00.000Z",
-          "expired": false,
-          "value": 1199,
-          "trend": "increase",
-          "ok_min": 300,
-          "ok_max": 10000,
-          "warning_high": 12000,
-          "warning_low": 200,
-          "gauge_max": 20000,
-          "gauge_min": 0,
-          "issuer": "gateway"
-        }
-      ]
-    }
-    */
+  runNumberTriggers(prevValue:number, newValue:number, tokens:object,
+    changeTrigger:any, 
+    goesAboveTrigger:any, 
+    goesBelowTrigger:any){
 
+      console.log('runNumberTriggers start');
+      if (changeTrigger!=null) changeTrigger.trigger(this, tokens, { prevVal:prevValue, newVal:newValue });
+      if (goesAboveTrigger!=null) goesAboveTrigger.trigger(this, tokens, { prevVal:prevValue, newVal:newValue });
+      if (goesBelowTrigger!=null) goesBelowTrigger.trigger(this, tokens, { prevVal:prevValue, newVal:newValue });
+      console.log('runNumberTriggers done');
+  }
+
+
+  createStatusText(status:MeasurementStatus):string {
+    let res='';
+    if (status == MeasurementStatus.WithinRecommended) res = 'Ok';
+    else if (status == MeasurementStatus.AboveRecommended) res = 'Above recommended';
+    else if (status == MeasurementStatus.BelowRecommended) res = 'Below recommended';
+    else if (status == MeasurementStatus.LowWarning) res = 'Low warning!';
+    else if (status == MeasurementStatus.HighWarning) res = 'Hign warning!';
+    return res;
+  }
+
+
+
+  parseMeasurement(measurement:any):Measurement {
+    let val = measurement.value;
+  
+    let measurementStatus: MeasurementStatus;
+    if (val < measurement.warning_low)       { measurementStatus = MeasurementStatus.LowWarning }
+    else if (val < measurement.ok_min)       { measurementStatus = MeasurementStatus.BelowRecommended }
+    else if (val < measurement.ok_max)       { measurementStatus = MeasurementStatus.WithinRecommended }
+    else if (val < measurement.warning_high) { measurementStatus = MeasurementStatus.AboveRecommended }
+    else                                     { measurementStatus = MeasurementStatus.HighWarning }
+    
+    
+    let res:Measurement = { 
+      name: measurement.name,
+      value: val,
+      status: measurementStatus
+    } 
+    return res;
   }
 
   async initAPI() {
@@ -256,9 +472,12 @@ class BlueConnectDevice extends Device {
 
 
   timerCallback() {
-      this.refreshMeasurements()
+      this.refreshMeasurements();
+      this.refreshFeed();
+      this.refreshPoolStatus();
+      this.refreshPoolGuidance();
 
-      this.runningtimer = setTimeout(() => { this.timerCallback(); }, 10 * 60 * 1000);
+      this.runningtimer = setTimeout(() => { this.timerCallback(); }, 1 * 60 * 1000);
   }
 
   startTimer() {
@@ -267,6 +486,27 @@ class BlueConnectDevice extends Device {
       this.runningtimer = setTimeout(() => { this.timerCallback(); }, 5000);
       console.log('Started timer');
   }
+
+  startTestTimer() {
+    console.log('Starting timer');
+  //this.runningtimer = setTimeout(function() { this.timerCallback(); }.bind(this), 10000);
+    this.runningtimer = setTimeout(() => { this.timerTestCallback(); }, 10000);
+    console.log('Started timer');
+  }
+
+  timerTestCallback() {
+    /*
+    console.log('Test trigger');
+    let tt:any;
+    tt= this.triggerTest;
+
+    tt.trigger(this, {val:5}, {olle:5});
+    console.log('Test trigger done');
+
+    //this.triggerTest.trigger({val:5}, {olle:5});
+*/
+    this.runningtimer = setTimeout(() => { this.timerTestCallback(); }, 10000);
+}
 
 }
 

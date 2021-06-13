@@ -6,12 +6,14 @@
     "build": "tsc"
   },
   "dependencies": {
-    "blueriiot-api-client": "^0.1.1",
+    "blueriiot-api-client": "^0.1.2",
+    "luxon": "^1.27.0",
     "source-map-support": "^0.5.19"
   },
   "devDependencies": {
     "@tsconfig/node12": "^1.0.7",
     "@types/homey": "npm:homey-apps-sdk-v3-types@^0.1.0",
+    "@types/luxon": "^1.27.0",
     "@types/node": "^15.12.1",
     "@types/source-map-support": "^0.5.3",
     "typescript": "^4.3.2"
