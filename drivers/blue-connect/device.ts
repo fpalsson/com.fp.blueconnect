@@ -1,4 +1,4 @@
-import { Device, FlowCardTriggerDevice, FlowToken } from 'homey';
+import { Device, FlowCardAction, FlowCardTriggerDevice, FlowToken } from 'homey';
 // @ts-ignore
 import { BlueriiotAPI } from 'blueriiot-api-client';
 //import { mapSourcePosition } from 'source-map-support';
@@ -36,16 +36,21 @@ class BlueConnectDevice extends Device {
 
   private capabilityCache:any=new Object();
 
+
+  //Flow Cards
   private triggerTest!: FlowCardTriggerDevice;
 
   private triggerNewMeasurement!: FlowCardTriggerDevice;
   private triggerNewGuidanceAction!: FlowCardTriggerDevice;
+  private triggerNeedsAttention!: FlowCardTriggerDevice;
 
-  private triggerPhChanged!: FlowCardTriggerDevice;
+  private actionRefreshMeasurement!: FlowCardAction;
+
+  //private triggerPhChanged!: FlowCardTriggerDevice;  //Not needed as the SDK triggers the flow automatically as the name is xxx_changed
   private triggerPhGoesAbove!: FlowCardTriggerDevice;
   private triggerPhGoesBelow!: FlowCardTriggerDevice;
 
-  private triggerOrpChanged!: FlowCardTriggerDevice;
+  //private triggerOrpChanged!: FlowCardTriggerDevice;  //Not needed as the SDK triggers the flow automatically as the name is xxx_changed
   private triggerOrpGoesAbove!: FlowCardTriggerDevice;
   private triggerOrpGoesBelow!: FlowCardTriggerDevice;
 
@@ -57,11 +62,14 @@ class BlueConnectDevice extends Device {
     if (!this.hasCapability('measurement_timestamp')) await this.addCapability('measurement_timestamp')
     if (!this.hasCapability('measure_temperature')) await this.addCapability('measure_temperature')
     if (!this.hasCapability('measure_ph')) await this.addCapability('measure_ph')
-    if (!this.hasCapability('status_ph')) await this.addCapability('status_ph')
     if (!this.hasCapability('measure_orp')) await this.addCapability('measure_orp')
+    if (!this.hasCapability('status_ph')) await this.addCapability('status_ph')
     if (!this.hasCapability('status_orp')) await this.addCapability('status_orp')
+    if (!this.hasCapability('alarm_need_attention')) await this.addCapability('alarm_need_attention')
     if (!this.hasCapability('guidance_action')) await this.addCapability('guidance_action')
     //Salinity and conductivity is added when measurement is read and we know which one is relevant...
+
+    //this.setCapabilityValue2('alarm_need_attention', false);
 
     //await this.setCapabilityValue2('measure_orp', 500);
 /*
@@ -73,10 +81,19 @@ class BlueConnectDevice extends Device {
   */   
     this.triggerNewMeasurement = this.homey.flow.getDeviceTriggerCard('new_measurement');
     this.triggerNewGuidanceAction = this.homey.flow.getDeviceTriggerCard('new_guidance_action');
+    this.triggerNeedsAttention = this.homey.flow.getDeviceTriggerCard('pool_need_attention');
+    this.actionRefreshMeasurement = this.homey.flow.getActionCard('trigger_refresh_measurement')
+    this.actionRefreshMeasurement.registerRunListener(async (args:any, state:any) => {
+      console.log('actionRefreshMeasurement run');
+      //probalby should lock to make sure this is not run in parallell with timers
+      this.refreshMeasurements();
+      console.log('actionRefreshMeasurement done.');
+    })
+    
 
-
-    this.triggerPhChanged = this.homey.flow.getDeviceTriggerCard('measure_ph_changed');
+    //this.triggerPhChanged = this.homey.flow.getDeviceTriggerCard('measure_ph_changed');
     //Changed trigger will be handeled by homey as it has id XXX_changed
+    
     this.triggerPhGoesAbove = this.homey.flow.getDeviceTriggerCard('measure_ph_goes_above');
     this.triggerPhGoesAbove.registerRunListener(async (args:any, state:any) => {
       console.log('triggerPhGoesAbove run');
@@ -84,7 +101,7 @@ class BlueConnectDevice extends Device {
       let res = (state.prevVal <= ph && state.newVal > ph);
       console.log('triggerPhGoesAbove ph: ' + ph + ', prev: ' + state.prevVal + ', new: ' + state.newVal + ', run: ' + res);
       return res;
-    })
+    });
     this.triggerPhGoesBelow = this.homey.flow.getDeviceTriggerCard('measure_orp_goes_below');
     this.triggerPhGoesBelow.registerRunListener(async (args:any, state:any) => {
       console.log('triggerPhGoesBelow run');
@@ -92,11 +109,12 @@ class BlueConnectDevice extends Device {
       let res = (state.prevVal >= ph && state.newVal < ph);
       console.log('triggerPhGoesBelow ph: ' + ph + ', prev: ' + state.prevVal + ', new: ' + state.newVal + ', run: ' + res);
       return res;
-    })
+    });
 
 
-    this.triggerOrpChanged = this.homey.flow.getDeviceTriggerCard('measure_orp_changed');
+    //this.triggerOrpChanged = this.homey.flow.getDeviceTriggerCard('measure_orp_changed');
     //Changed trigger will be handeled by homey as it has id XXX_changed
+    
     this.triggerOrpGoesAbove = this.homey.flow.getDeviceTriggerCard('measure_orp_goes_above');
     this.triggerOrpGoesAbove.registerRunListener(async (args:any, state:any) => {
       console.log('triggerOrpGoesAbove run');
@@ -235,6 +253,29 @@ class BlueConnectDevice extends Device {
   
       console.log('Read pool status...');
       console.log(poolStatusStringData);
+
+      let lastValue = this.getCapabilityValue2('alarm_need_attention');
+      if (lastValue == undefined) lastValue = false;
+
+      let status = poolStatus.global_status_code;
+      if (status == 'SP_NOT_OK'){
+        if (lastValue == false){
+          console.log('Pool status not ok. Setting alarm');
+          await this.setCapabilityValue2('alarm_need_attention', true);
+          let trigger:any = this.triggerNeedsAttention; // as the type definitions are wrong...
+          trigger.trigger(this,{},{});
+        }
+      }
+      else if (status == 'SP_OK') {
+        if (lastValue == true){
+          console.log('Pool status not ok. Clearing alarm');
+          await this.setCapabilityValue2('alarm_need_attention', false);
+        } 
+      }
+      else{
+        console.log('Pool status not understood. Dooing nothing');
+
+      }
 
       let poolStatusTimestamp = new Date(Date.parse(poolStatus.created));
       if (poolStatusTimestamp > this.lastPoolStatusTimestamp) {
@@ -474,10 +515,10 @@ class BlueConnectDevice extends Device {
   timerCallback() {
       this.refreshMeasurements();
       this.refreshFeed();
-      this.refreshPoolStatus();
       this.refreshPoolGuidance();
+      this.refreshPoolStatus();
 
-      this.runningtimer = setTimeout(() => { this.timerCallback(); }, 1 * 60 * 1000);
+      this.runningtimer = setTimeout(() => { this.timerCallback(); }, 10 * 60 * 1000);
   }
 
   startTimer() {

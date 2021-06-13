@@ -8,7 +8,7 @@
   "getable": true,
   "setable": false,
   "units": {
-    "en": "uS"
+    "en": "µS"
   },
   "min": 0,
   "max": 20000,

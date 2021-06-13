@@ -1,6 +1,5 @@
 {
-  "temp":
-  [
+  "temp": [
     {
       "id": "test",
       "title": {
@@ -19,7 +18,6 @@
         }
       ]
     }
-
   ],
   "triggers": [
     {
@@ -269,6 +267,26 @@
           }
         }
       ]
+    },
+    {
+      "id": "pool_need_attention",
+      "title": {
+        "en": "Pool needs attention"
+      },
+      "hint": {
+        "en": "Triggers when pool needs attention"
+      }
+    }
+  ],
+  "actions": [
+    {
+      "id": "trigger_refresh_measurement",
+      "title": {
+        "en": "Look for new measurement"
+      },
+      "hint": {
+        "en": "Manually check if there is a new measurement and retreive it if there is"
+      }
     }
   ]
 }

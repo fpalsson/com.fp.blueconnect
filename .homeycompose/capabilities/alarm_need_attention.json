@@ -1,0 +1,11 @@
+{
+    "type": "boolean",
+    "title": {
+        "en": "Pool needs attention"
+    },
+    "icon": "/assets/warning.svg",
+    "uiComponent": "sensor",
+
+    "getable": true,
+    "setable": false
+}
