@@ -21,3 +21,4 @@ settings/*
 assets/images/appimage.orig.png
 assets/icon.old.svg
 test.json
+app.json

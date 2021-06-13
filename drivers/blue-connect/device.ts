@@ -59,15 +59,33 @@ class BlueConnectDevice extends Device {
    */
   async onInit() {
 
-    if (!this.hasCapability('measurement_timestamp')) await this.addCapability('measurement_timestamp')
-    if (!this.hasCapability('measure_temperature')) await this.addCapability('measure_temperature')
-    if (!this.hasCapability('measure_ph')) await this.addCapability('measure_ph')
-    if (!this.hasCapability('measure_orp')) await this.addCapability('measure_orp')
-    if (!this.hasCapability('status_ph')) await this.addCapability('status_ph')
-    if (!this.hasCapability('status_orp')) await this.addCapability('status_orp')
-    if (!this.hasCapability('alarm_need_attention')) await this.addCapability('alarm_need_attention')
-    if (!this.hasCapability('guidance_action')) await this.addCapability('guidance_action')
-    //Salinity and conductivity is added when measurement is read and we know which one is relevant...
+    //ugly way to make sure sensors are ordered the way we want. :-(
+    if (true)
+    {
+      if (this.hasCapability('measure_temperature')) await this.removeCapability('measure_temperature');
+      if (this.hasCapability('measure_ph')) await this.removeCapability('measure_ph');
+      if (this.hasCapability('measure_orp')) await this.removeCapability('measure_orp');
+      if (this.hasCapability('status_ph')) await this.removeCapability('status_ph');
+      if (this.hasCapability('status_orp')) await this.removeCapability('status_orp');
+      if (this.hasCapability('measurement_timestamp')) await this.removeCapability('measurement_timestamp');
+      if (this.hasCapability('alarm_need_attention')) await this.removeCapability('alarm_need_attention');
+      if (this.hasCapability('guidance_action')) await this.removeCapability('guidance_action');
+      if (this.hasCapability('measure_conductivity')) await this.removeCapability('measure_conductivity');
+      if (this.hasCapability('measure_salinity')) await this.removeCapability('measure_salinity');
+      if (this.hasCapability('status_salinity')) await this.removeCapability('status_salinity');
+    }
+
+    if (!this.hasCapability('measure_temperature')) await this.addCapability('measure_temperature');
+    if (!this.hasCapability('measure_ph')) await this.addCapability('measure_ph');
+    if (!this.hasCapability('measure_orp')) await this.addCapability('measure_orp');
+    if (!this.hasCapability('measure_conductivity')) await this.addCapability('measure_conductivity'); //Will be removed later if saliity is used
+    if (!this.hasCapability('measure_salinity')) await this.addCapability('measure_salinity'); //Will be removed later if conductivity is used
+    if (!this.hasCapability('status_ph')) await this.addCapability('status_ph');
+    if (!this.hasCapability('status_orp')) await this.addCapability('status_orp');
+    if (!this.hasCapability('status_salinity')) await this.addCapability('status_salinity'); //Will be removed later if conductivity is used
+    if (!this.hasCapability('measurement_timestamp')) await this.addCapability('measurement_timestamp');
+    if (!this.hasCapability('alarm_need_attention')) await this.addCapability('alarm_need_attention');
+    if (!this.hasCapability('guidance_action')) await this.addCapability('guidance_action');
 
     //this.setCapabilityValue2('alarm_need_attention', false);
 
@@ -82,56 +100,18 @@ class BlueConnectDevice extends Device {
     this.triggerNewMeasurement = this.homey.flow.getDeviceTriggerCard('new_measurement');
     this.triggerNewGuidanceAction = this.homey.flow.getDeviceTriggerCard('new_guidance_action');
     this.triggerNeedsAttention = this.homey.flow.getDeviceTriggerCard('pool_need_attention');
-    this.actionRefreshMeasurement = this.homey.flow.getActionCard('trigger_refresh_measurement')
-    this.actionRefreshMeasurement.registerRunListener(async (args:any, state:any) => {
-      console.log('actionRefreshMeasurement run');
-      //probalby should lock to make sure this is not run in parallell with timers
-      this.refreshMeasurements();
-      console.log('actionRefreshMeasurement done.');
-    })
-    
 
     //this.triggerPhChanged = this.homey.flow.getDeviceTriggerCard('measure_ph_changed');
     //Changed trigger will be handeled by homey as it has id XXX_changed
     
     this.triggerPhGoesAbove = this.homey.flow.getDeviceTriggerCard('measure_ph_goes_above');
-    this.triggerPhGoesAbove.registerRunListener(async (args:any, state:any) => {
-      console.log('triggerPhGoesAbove run');
-      let ph:number = args.ph;
-      let res = (state.prevVal <= ph && state.newVal > ph);
-      console.log('triggerPhGoesAbove ph: ' + ph + ', prev: ' + state.prevVal + ', new: ' + state.newVal + ', run: ' + res);
-      return res;
-    });
     this.triggerPhGoesBelow = this.homey.flow.getDeviceTriggerCard('measure_orp_goes_below');
-    this.triggerPhGoesBelow.registerRunListener(async (args:any, state:any) => {
-      console.log('triggerPhGoesBelow run');
-      let ph:number = args.ph;
-      let res = (state.prevVal >= ph && state.newVal < ph);
-      console.log('triggerPhGoesBelow ph: ' + ph + ', prev: ' + state.prevVal + ', new: ' + state.newVal + ', run: ' + res);
-      return res;
-    });
-
 
     //this.triggerOrpChanged = this.homey.flow.getDeviceTriggerCard('measure_orp_changed');
     //Changed trigger will be handeled by homey as it has id XXX_changed
     
     this.triggerOrpGoesAbove = this.homey.flow.getDeviceTriggerCard('measure_orp_goes_above');
-    this.triggerOrpGoesAbove.registerRunListener(async (args:any, state:any) => {
-      console.log('triggerOrpGoesAbove run');
-      let orp:number = args.orp;
-      let res = (state.prevVal <= orp && state.newVal > orp);
-      console.log('triggerOrpGoesAbove orp: ' + orp + ', prev: ' + state.prevVal + ', new: ' + state.newVal + ', run: ' + res);
-      return res;
-    })
     this.triggerOrpGoesBelow = this.homey.flow.getDeviceTriggerCard('measure_orp_goes_below');
-    this.triggerOrpGoesBelow.registerRunListener(async (args:any, state:any) => {
-      console.log('triggerOrpGoesBelow run');
-      let orp:number = args.orp;
-      let res = (state.prevVal >= orp && state.newVal < orp);
-      console.log('triggerOrpGoesBelow orp: ' + orp + ', prev: ' + state.prevVal + ', new: ' + state.newVal + ', run: ' + res);
-      return res;
-    })
-
     
     let data:any = this.getData();
     console.log(data.id);
@@ -382,7 +362,7 @@ class BlueConnectDevice extends Device {
                     if (this.hasCapability('measure_salinity')) await this.removeCapability('measure_salinity')
                     if (this.hasCapability('status_salinity')) await this.removeCapability('status_salinity')
 
-                    if (!this.hasCapability('measure_conductivity')) await this.addCapability('measure_conductivity')
+//                    if (!this.hasCapability('measure_conductivity')) await this.addCapability('measure_conductivity')
                     await this.setCapabilityValue2('measure_conductivity', pm.value);      
                     console.log('New conductivity measurement. Now: ' + pm.value);
                   break; 
@@ -390,9 +370,9 @@ class BlueConnectDevice extends Device {
                   case 'salinity': { 
                     if (this.hasCapability('measure_conductivity')) await this.removeCapability('measure_conductivity')
 
-                    if (!this.hasCapability('measure_salinity')) await this.addCapability('measure_salinity')
+//                    if (!this.hasCapability('measure_salinity')) await this.addCapability('measure_salinity')
                     await this.setCapabilityValue2('measure_salinity', pm.value);      
-                    if (!this.hasCapability('status_salinity')) await this.addCapability('status_salinity')
+//                    if (!this.hasCapability('status_salinity')) await this.addCapability('status_salinity')
                     await this.setCapabilityValue2('status_salinity', this.createStatusText(pm.status));      
                     console.log('New salinity measurement. Now: ' + pm.value);
                   break; 

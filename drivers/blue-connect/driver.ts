@@ -1,13 +1,27 @@
-import { Driver } from 'homey';
+import { Driver, FlowCardAction, FlowCardTriggerDevice } from 'homey';
 // @ts-ignore
 import { BlueriiotAPI} from 'blueriiot-api-client';
 
 class BlueConnectDriver extends Driver {
 
+  private actionRefreshMeasurement!: FlowCardAction;
+
+  //private triggerPhChanged!: FlowCardTriggerDevice;  //Not needed as the SDK triggers the flow automatically as the name is xxx_changed
+  private triggerPhGoesAbove!: FlowCardTriggerDevice;
+  private triggerPhGoesBelow!: FlowCardTriggerDevice;
+
+  //private triggerOrpChanged!: FlowCardTriggerDevice;  //Not needed as the SDK triggers the flow automatically as the name is xxx_changed
+  private triggerOrpGoesAbove!: FlowCardTriggerDevice;
+  private triggerOrpGoesBelow!: FlowCardTriggerDevice;
+
   /**
    * onInit is called when the driver is initialized.
    */
   async onInit() {
+    this.log('BlueConnectDriver initializing...');
+
+    this.setupRunListeners();
+
     this.log('BlueConnectDriver has been initialized');
   }
 
@@ -87,6 +101,56 @@ class BlueConnectDriver extends Driver {
       // },
     ];
   }
+
+  setupRunListeners(){
+    this.actionRefreshMeasurement = this.homey.flow.getActionCard('trigger_refresh_measurement')
+    this.actionRefreshMeasurement.registerRunListener(async (args:any, state:any) => {
+      console.log('actionRefreshMeasurement run');
+      //probalby should lock to make sure this is not run in parallell with timers
+      args.device.refreshMeasurements();
+      console.log('actionRefreshMeasurement done.');
+    })
+    
+    this.triggerPhGoesAbove = this.homey.flow.getDeviceTriggerCard('measure_ph_goes_above');
+    this.triggerPhGoesAbove.registerRunListener(async (args:any, state:any) => {
+      console.log('triggerPhGoesAbove run');
+      let ph:number = args.ph;
+      let res = (state.prevVal <= ph && state.newVal > ph);
+      console.log('triggerPhGoesAbove ph: ' + ph + ', prev: ' + state.prevVal + ', new: ' + state.newVal + ', run: ' + res);
+      return res;
+    });
+
+    this.triggerPhGoesBelow = this.homey.flow.getDeviceTriggerCard('measure_orp_goes_below');
+    this.triggerPhGoesBelow.registerRunListener(async (args:any, state:any) => {
+      console.log('triggerPhGoesBelow run');
+      let ph:number = args.ph;
+      let res = (state.prevVal >= ph && state.newVal < ph);
+      console.log('triggerPhGoesBelow ph: ' + ph + ', prev: ' + state.prevVal + ', new: ' + state.newVal + ', run: ' + res);
+      return res;
+    });
+
+    this.triggerOrpGoesAbove = this.homey.flow.getDeviceTriggerCard('measure_orp_goes_above');
+    this.triggerOrpGoesAbove.registerRunListener(async (args:any, state:any) => {
+      console.log('triggerOrpGoesAbove run');
+      let orp:number = args.orp;
+      let res = (state.prevVal <= orp && state.newVal > orp);
+      console.log('triggerOrpGoesAbove orp: ' + orp + ', prev: ' + state.prevVal + ', new: ' + state.newVal + ', run: ' + res);
+      return res;
+    })
+    this.triggerOrpGoesBelow = this.homey.flow.getDeviceTriggerCard('measure_orp_goes_below');
+    this.triggerOrpGoesBelow.registerRunListener(async (args:any, state:any) => {
+      console.log('triggerOrpGoesBelow run');
+      let orp:number = args.orp;
+      let res = (state.prevVal >= orp && state.newVal < orp);
+      console.log('triggerOrpGoesBelow orp: ' + orp + ', prev: ' + state.prevVal + ', new: ' + state.newVal + ', run: ' + res);
+      return res;
+    })
+
+
+
+
+  }
+
 }
 
 module.exports = BlueConnectDriver;
