@@ -60,7 +60,7 @@ class BlueConnectDevice extends Device {
   async onInit() {
 
     //ugly way to make sure sensors are ordered the way we want. :-(
-    if (true)
+    if (false)
     {
       if (this.hasCapability('measure_temperature')) await this.removeCapability('measure_temperature');
       if (this.hasCapability('measure_ph')) await this.removeCapability('measure_ph');
@@ -283,12 +283,27 @@ class BlueConnectDevice extends Device {
       console.log('Read pool guidance...');
       console.log(poolGuidanceStringData);
 
-      let poolGuidanceTimestamp = new Date(Date.parse(poolGuidance.created));
-      
-      let id = poolGuidance.guidance.issue_to_fix.task_identifier;
-      let action = poolGuidance.guidance.issue_to_fix.action_title;
-      let title = poolGuidance.guidance.issue_to_fix.issue_title;
+      //let poolGuidanceTimestamp = new Date(Date.parse(poolGuidance.created));
+      //"swp_global_status": "SP_NOT_OK",
+      let id = '';
+      let action = '';
+      let title = '';
 
+      if (poolGuidance.guidance.swp_global_status == 'SP_NOT_OK'){
+        console.log('Guidance status: SP_NOT_OK');
+        id = poolGuidance.guidance.issue_to_fix.task_identifier;
+        action = poolGuidance.guidance.issue_to_fix.action_title;
+        title = poolGuidance.guidance.issue_to_fix.issue_title;
+      }
+      else if (poolGuidance.guidance.swp_global_status == 'SP_OK') {
+        console.log('Guidance status: SP_OK');
+        action = 'Nothing to do';
+      }
+      else {
+        console.log('Guidance status: ' + poolGuidance.guidance.swp_global_status);
+        action = 'Unknown action info retreived!';
+      }
+    
       if (action != this.getCapabilityValue2('guidance_action')){
 
         await this.setCapabilityValue2('guidance_action', action);  
@@ -303,11 +318,6 @@ class BlueConnectDevice extends Device {
         await trigger.trigger(this, tokens, {});
         console.log('Triggered new guidance action flow');
       }
-      else {
-        console.log('No new guidance');
-      }
-
-        
     } catch (error) {
       console.log('Error in refreshPoolGuidance: ' + error);      
     }
