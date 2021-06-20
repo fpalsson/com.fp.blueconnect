@@ -1,4 +1,4 @@
-# com.fp.blueconnect
+# Blueriiot Blue Connect
 This app adds support for Blueriiot Blue Connect devices.
 
 Currently it reads temperature, pH, ORP and conductivity or salinity.

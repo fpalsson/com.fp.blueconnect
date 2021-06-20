@@ -170,7 +170,7 @@ class BlueConnectDevice extends Device {
 
   async setCapabilityValue2(capabilityId:string, value:any){
     this.capabilityCache[capabilityId]=value;
-    this.setCapabilityValue(capabilityId, value);
+    await this.setCapabilityValue(capabilityId, value);
   }
 
   getCapabilityValue2(capabilityId:string){
@@ -242,13 +242,13 @@ class BlueConnectDevice extends Device {
         if (lastValue == false){
           console.log('Pool status not ok. Setting alarm');
           await this.setCapabilityValue2('alarm_need_attention', true);
-          let trigger:any = this.triggerNeedsAttention; // as the type definitions are wrong...
-          trigger.trigger(this,{},{});
+
+          this.triggerNeedsAttention.trigger(this,{},{});
         }
       }
       else if (status == 'SP_OK') {
         if (lastValue == true){
-          console.log('Pool status not ok. Clearing alarm');
+          console.log('Pool status ok. Clearing alarm');
           await this.setCapabilityValue2('alarm_need_attention', false);
         } 
       }
@@ -274,7 +274,9 @@ class BlueConnectDevice extends Device {
       console.log('Error in refreshPoolStatus: ' + error);      
     }
   }
+
   async refreshPoolGuidance() {
+    
     try {
       //console.log('Starting refresh with poolId: ' + this.poolId + ' blueId: ' + this.blueId);
       let poolGuidanceStringData = await this.api.getGuidance(this.poolId, "en");
@@ -285,15 +287,15 @@ class BlueConnectDevice extends Device {
 
       //let poolGuidanceTimestamp = new Date(Date.parse(poolGuidance.created));
       //"swp_global_status": "SP_NOT_OK",
-      let id = '';
+      //let id = '';
       let action = '';
-      let title = '';
+      //let title = '';
 
       if (poolGuidance.guidance.swp_global_status == 'SP_NOT_OK'){
         console.log('Guidance status: SP_NOT_OK');
-        id = poolGuidance.guidance.issue_to_fix.task_identifier;
+        //id = poolGuidance.guidance.issue_to_fix.task_identifier;
         action = poolGuidance.guidance.issue_to_fix.action_title;
-        title = poolGuidance.guidance.issue_to_fix.issue_title;
+        //title = poolGuidance.guidance.issue_to_fix.issue_title;
       }
       else if (poolGuidance.guidance.swp_global_status == 'SP_OK') {
         console.log('Guidance status: SP_OK');
@@ -314,8 +316,7 @@ class BlueConnectDevice extends Device {
           guidance_action : <string>action,
         }
         
-        let trigger:any = this.triggerNewGuidanceAction;
-        await trigger.trigger(this, tokens, {});
+        await this.triggerNewGuidanceAction.trigger(this, tokens, {});
         console.log('Triggered new guidance action flow');
       }
     } catch (error) {
@@ -409,8 +410,7 @@ class BlueConnectDevice extends Device {
           }
           console.log ('Tokens new measurement: ' + tokens);
 
-          let trigger:any = this.triggerNewMeasurement;
-          await trigger.trigger(this, tokens, {});
+          await this.triggerNewMeasurement.trigger(this, tokens, {});
           console.log('Triggered new measurement flow');
       }
       else {
@@ -425,9 +425,9 @@ class BlueConnectDevice extends Device {
   }
 
   runNumberTriggers(prevValue:number, newValue:number, tokens:object,
-    changeTrigger:any, 
-    goesAboveTrigger:any, 
-    goesBelowTrigger:any){
+    changeTrigger:FlowCardTriggerDevice|null, 
+    goesAboveTrigger:FlowCardTriggerDevice|null, 
+    goesBelowTrigger:FlowCardTriggerDevice|null){
 
       console.log('runNumberTriggers start');
       if (changeTrigger!=null) changeTrigger.trigger(this, tokens, { prevVal:prevValue, newVal:newValue });
@@ -502,11 +502,16 @@ class BlueConnectDevice extends Device {
   }
 
 
-  timerCallback() {
-      this.refreshMeasurements();
-      this.refreshFeed();
-      this.refreshPoolGuidance();
-      this.refreshPoolStatus();
+  async timerCallback() {
+      try {
+        await this.refreshMeasurements();
+        await this.refreshFeed();
+        await this.refreshPoolGuidance();
+        await this.refreshPoolStatus();
+          
+      } catch (error) {
+        console.error('timerCallback error: ' + error.message);
+      }
 
       this.runningtimer = setTimeout(() => { this.timerCallback(); }, 10 * 60 * 1000);
   }

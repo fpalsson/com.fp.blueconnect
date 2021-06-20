@@ -31,6 +31,10 @@
   }  ,
   "0.1.7": {
     "en": "Added guidance action info. Added alarm for pool need attention. Added salinity measurement. New sensor icons. Added flows for changed/above/below for pH and ORP. Added flows for new measurements and new guidance actions. Added flow for pool needs atteontion. Added state sensors for pH, ORP, conductivity. Bugfix: Waiting for values to be set before using them. Bugfix: corrected above/below flows. Bugfix: moved runlisteners to driver. Bugfix: removed development code for changing sensor order. Bugfix: guidance update adjustment.  Adjusted README."
+  },
+  "0.1.8": {
+    "en": "Now the app reads measurements, feed, guidance info and status (in that order). This means that flows based on \"Pool needs attention\" can now use guidance info."
   }
+
 
 }
