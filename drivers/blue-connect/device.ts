@@ -252,8 +252,12 @@ class BlueConnectDevice extends Device {
           await this.setCapabilityValue2('alarm_need_attention', false);
         } 
       }
+
+      else if (status == 'DATA_EXPIRED') {
+        console.log('Pool status data is expired, doing nothing');
+      }
       else{
-        console.log('Pool status not understood. Dooing nothing');
+        console.log('Pool status: "' + status + '" not understood. Doing nothing');
 
       }
 
@@ -300,6 +304,10 @@ class BlueConnectDevice extends Device {
       else if (poolGuidance.guidance.swp_global_status == 'SP_OK') {
         console.log('Guidance status: SP_OK');
         action = 'Nothing to do';
+      }
+      else if (poolGuidance.guidance.swp_global_status == 'DATA_EXPIRED') {
+        console.log('Guidance status: DATA_EXPIRED');
+        action = 'Data expired';
       }
       else {
         console.log('Guidance status: ' + poolGuidance.guidance.swp_global_status);

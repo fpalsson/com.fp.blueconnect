@@ -34,6 +34,9 @@
   },
   "0.1.8": {
     "en": "Now the app reads measurements, feed, guidance info and status (in that order). This means that flows based on \"Pool needs attention\" can now use guidance info."
+  },
+  "0.1.9": {
+    "en": "Now correctly parses info about expired data."
   }
 
 

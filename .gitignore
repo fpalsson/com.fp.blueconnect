@@ -23,3 +23,7 @@ assets/icon.old.svg
 test.json
 app.json
 no_guidanse.json
+feed expired.json
+guidance expired.json
+measurement expired.json
+status expired.json
